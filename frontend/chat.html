@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Homing Chat</title>
+
+</head>
+
+<body>
+
+    <!-- Navbar -->
+
+    <header class="navbar">
+
+        <div class="container">
+
+            <a href="index.html" class="logo">
+
+                <img src="/logo.svg" alt="Homing">
+
+                <span class="h3">Homing</span>
+
+            </a>
+
+            <nav>
+
+                <ul class="nav-links">
+
+                    <li><a href="#">New Chat</a></li>
+
+                    <li><a href="#">History</a></li>
+
+                </ul>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+        <div class="chat-toolbar">
+
+        <a href="index.html" class="back-link">
+
+            ← Back to Landing
+
+        </a>
+
+    </div>
+
+    <!-- Chat Page -->
+
+    <main class="chat-page">
+
+        <section class="chat-container">
+
+            <!-- Conversation -->
+
+            <div class="conversation">
+
+                <div class="message ai">
+
+                    <img src="/logo.svg" class="avatar" alt="AI">
+
+                    <div class="bubble ai-bubble">
+
+                        <p>Hello! I'm Homing.</p>
+
+                        <p>
+                            How can I help you find your new best friend today?
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="message user">
+
+                    <div class="bubble user-bubble">
+
+                        I'm looking for a small dog that is good with kids.
+
+                    </div>
+
+                </div>
+
+                <div class="message ai">
+
+                    <img src="/logo.svg" class="avatar" alt="AI">
+
+                    <div class="bubble ai-bubble">
+
+                        That's wonderful! We have several small, friendly dogs waiting for a home.
+
+                    </div>
+
+                </div>
+
+                <!-- Thêm nhiều message để test scroll -->
+
+                <div class="message ai">
+
+                    <img src="/logo.svg" class="avatar" alt="AI">
+
+                    <div class="bubble ai-bubble">
+
+                        We also have rescue cats if you're interested.
+
+                    </div>
+
+                </div>
+
+                <div class="message user">
+
+                    <div class="bubble user-bubble">
+
+                        Can you recommend a calm dog?
+
+                    </div>
+
+                </div>
+
+                <div class="message ai">
+
+                    <img src="/logo.svg" class="avatar" alt="AI">
+
+                    <div class="bubble ai-bubble">
+
+                        Sure! I think Luna would be a great match.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Input -->
+
+            <form class="chat-input">
+
+                <input
+                    type="text"
+                    placeholder="Ask me about any dog..." />
+
+                <button type="submit">
+
+                    Send
+
+                </button>
+
+            </form>
+
+        </section>
+
+    </main>
+
+    <script type="module" src="/src/chat.js"></script>
+
+</body>
+
+</html>
