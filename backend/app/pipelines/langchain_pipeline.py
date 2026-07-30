@@ -1,71 +1,91 @@
 from app.pipelines.pipeline import ChatPipeline
-from app.repositories.conversation_repository import ConversationRepository
-from app.repositories.message_repository import MessageRepository
-from app.schemas.chat import ChatRequest, ChatResponse
-from langchain_core.messages import AIMessage, HumanMessage
-from app.core.logging import logger
 from app.schemas.chat import (
     ChatResponse,
-    TextMessage,
+    ChatMessage,
+    ChatRequest
 )
-from app.chains.chatbot_chain import chat_chain
-from app.mapper.message_mapper import MessageMapper
+from app.chains.chatbot_chain import structured_model
+from app.prompts.chat_prompt import chat_prompt
+from app.pipelines.history_manager import HistoryManager
+from app.pipelines.conversation_manager import ConversationManager
+from app.schemas.message import MessageCreate, TextContent
+from app.retriver.knowledge_retriever import KnowledgeRetriever
+from app.mapper.chat_result_mapper import ChatResultMapper
+from app.core.logging import logger
+from app.pipelines.context_builder import ContextBuilder
+
 
 class LangChainPipeline(ChatPipeline):
     def __init__(
             self, 
-            message_repository : MessageRepository,
-            conversation_repository : ConversationRepository,
+            conversation_manager : ConversationManager,
+            history_manager : HistoryManager,
+            knowledge_retriever: KnowledgeRetriever,
+            chat_result_mapper : ChatResultMapper,
+            context_builder : ContextBuilder,
         ):
-            self.conversation_repository = conversation_repository
-            self.message_repository = message_repository
+            self.conversation_manager = conversation_manager
+            self.history_manager = history_manager
+            self.knowledge_retriever = knowledge_retriever
+            self.chat_result_mapper = chat_result_mapper
+            self.context_builder = context_builder
 
     async def run(self, request: ChatRequest):
-        if request.conversation_id is None:
-            conversation = await self.conversation_repository.create(
-                    title=request.message,
-                    session_id=request.session_id
-                )
-        else:
-            conversation = await self.conversation_repository.get_by_id(
-                request.conversation_id                )
+        conversation = await self.conversation_manager.get_or_create(request=request)
         
-        history = await self.message_repository.get_by_conversation(conversation.id)
+        history_messages = await self.history_manager.load(conversation_id=conversation.id)
 
-        history_messages = []
+        # Retriever
+        chunks = await self.knowledge_retriever.retrieve(
+            request.message
+        )
 
-        for message in history:
-            if message.role == "user":
-                history_messages.append(
-                    HumanMessage(content=message.content)
-                )
-            else:
-                history_messages.append(
-                    AIMessage(content=message.content)
-                )
+        # Context Builder
+        context = self.context_builder.build(chunks)
 
-        answer = await chat_chain.ainvoke(
+        logger.info(f"CONTEXT: {context}")
+
+        prompt = await chat_prompt.ainvoke(
             {
                 "history": history_messages,
                 "input": request.message,
+                "context": context,
             }
         )
 
-        await self.message_repository.create(
+        result = await structured_model.ainvoke(prompt)
+        logger.info(f"RESULT: {result}")
+        
+        assistant_message = await self.chat_result_mapper.map(
+            result
+        )
+        #answer ="hihihi" 
+
+        await self.history_manager.save(
             conversation_id=conversation.id,
-            role="user",
-            content=request.message,
+            messages=[
+                MessageCreate(
+                    role="user",
+                    content=[
+                        TextContent(
+                            text=request.message,
+                        )
+                    ],
+                ),
+                assistant_message,
+            ],
         )
 
-        await self.message_repository.create(
-            conversation_id=conversation.id,
-            role="assistant",
-            content=answer,
+        await self.conversation_manager.touch(
+            conversation.id
         )
     
         return ChatResponse(
             conversation_id=conversation.id,
             messages=[
-                TextMessage(content=answer,role="assistant"),
+                ChatMessage(
+                    role=assistant_message.role,
+                    content=assistant_message.content,
+                )
             ],
         )

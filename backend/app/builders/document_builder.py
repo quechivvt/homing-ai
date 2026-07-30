@@ -17,5 +17,5 @@ class DocumentBuilder:
             Age: {pet.age}
 
             Description:
-            {pet.description}
+            {pet.raw_data}
         """.strip()

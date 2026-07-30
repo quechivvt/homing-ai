@@ -38,23 +38,29 @@ class KnowledgeRepository:
 
         await self.db.execute(stmt)
 
-    async def similarity_search(
+    async def search(
         self,
         embedding: list[float],
+        *,
         limit: int = 5,
+        max_distance: float | None = None,
     ) -> list[KnowledgeChunk]:
-        """
-        Return the most similar chunks using cosine distance.
-        """
+
+        distance = KnowledgeChunk.embedding.cosine_distance(
+            embedding
+        )
+
         stmt = (
             select(KnowledgeChunk)
-            .order_by(
-                KnowledgeChunk.embedding.cosine_distance(embedding)
-            )
+            .order_by(distance)
             .limit(limit)
         )
 
+        if max_distance is not None:
+            stmt = stmt.where(distance <= max_distance)
+
         result = await self.db.execute(stmt)
+
         return list(result.scalars().all())
 
     async def get_by_source(

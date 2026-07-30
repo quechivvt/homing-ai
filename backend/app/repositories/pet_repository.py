@@ -1,12 +1,28 @@
-from sqlalchemy import select
+from sqlalchemy import exists, select
 
 from app.models import Pet
 from app.repositories.base_repository import BaseRepository
+from app.models.knowledge_chunk import KnowledgeChunk
 
 
 class PetRepository(BaseRepository[Pet]):
     def __init__(self, db):
         super().__init__(db, Pet)
+
+    async def get_by_ids(
+        self,
+        ids: list[int],
+    ) -> list[Pet]:
+        if not ids:
+            return []
+
+        result = await self.db.execute(
+            select(Pet).where(
+                Pet.id.in_(ids)
+            )
+        )
+
+        return list(result.scalars().all())
 
     async def get_by_source(
         self,
@@ -22,6 +38,24 @@ class PetRepository(BaseRepository[Pet]):
         )
 
         return result.scalar_one_or_none()
+
+    async def list_not_ingested(
+        self,
+        limit: int = 60,
+    ) -> list[Pet]:
+        stmt = (
+            select(Pet)
+            .where(
+                ~exists().where(
+                (KnowledgeChunk.source_type == "pet")
+                & (KnowledgeChunk.source_id == Pet.id)
+                )
+            )
+            .limit(limit)
+        )
+    
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
 
     async def list_available(
         self,

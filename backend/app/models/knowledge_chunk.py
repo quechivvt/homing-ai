@@ -20,8 +20,8 @@ class KnowledgeChunk(Base):
 
     source_type: Mapped[str] = mapped_column(String(50), nullable=False)
 
-    source_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True),
+    source_id: Mapped[int] = mapped_column(
+        Integer,
         nullable=False,
     )
 
@@ -43,7 +43,7 @@ class KnowledgeChunk(Base):
     )
 
     embedding: Mapped[list[float]] = mapped_column(
-        Vector(768),
+        Vector(3072),
         nullable=False,
     )
 

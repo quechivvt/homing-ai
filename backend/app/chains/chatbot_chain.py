@@ -1,9 +1,8 @@
-from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI
 
 from app.core.config import settings
 from app.prompts.chat_prompt import chat_prompt
-from langchain_core.output_parsers import StrOutputParser
+from app.schemas.chat import ChatResult
 
 model = ChatOpenAI(
     model=settings.GEMINI_MODEL,
@@ -11,13 +10,4 @@ model = ChatOpenAI(
     base_url=settings.BASE_URL,
 )
 
-parser = StrOutputParser()
-
-chat_chain = chat_prompt | model | parser
-
-#model = ChatGoogleGenerativeAI(
-#    model=settings.GEMINI_MODEL,
-#    google_api_key=settings.GEMINI_API_KEY,
-#)
-
-
+structured_model = model.with_structured_output(ChatResult)

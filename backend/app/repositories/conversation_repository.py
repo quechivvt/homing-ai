@@ -1,6 +1,7 @@
+from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.models import Conversation
 from app.repositories.base_repository import BaseRepository
@@ -71,3 +72,17 @@ class ConversationRepository(BaseRepository[Conversation]):
         await self.db.refresh(conversation)
     
         return conversation
+
+    async def touch(
+        self,
+        conversation_id: UUID,
+    ) -> None:
+        await self.db.execute(
+            update(Conversation)
+            .where(Conversation.id == conversation_id)
+            .values(
+                updated_at=datetime.now(UTC)
+            )
+        )
+
+        await self.db.commit()

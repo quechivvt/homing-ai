@@ -1,29 +1,15 @@
-from typing import Literal, Union
+from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from app.enum.message_role import MessageRole
+from app.schemas.message import MessageContent
 
 
-class TextMessage(BaseModel):
-    type: Literal["text"] = "text"
-    role: Literal["user","assistant"]
-    content: str
-
-
-class PetCardMessage(BaseModel):
-    type: Literal["pet_card"] = "pet_card"
-    pet_id: UUID
-    name: str
-    image_url: str
-    gender: str
-    age: str
-    breed: str | None = None
-
-
-ChatMessage = Union[
-    TextMessage,
-    PetCardMessage,
-]
+class ChatMessage(BaseModel):
+    role: MessageRole
+    content: list[MessageContent]
 
 
 class ChatRequest(BaseModel):
@@ -35,3 +21,22 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     conversation_id: UUID
     messages: list[ChatMessage]
+
+class ChatResult(BaseModel):
+    """
+    Structured output returned by the LLM.
+    This model is internal and will be mapped to MessageContent.
+    """
+
+    answer: str = Field(
+        description="Natural language response for the user."
+    )
+
+    recommended_pet_ids: list[int] = Field(
+        default_factory=list,
+        description=(
+            "IDs of pets that should be displayed as pet cards. "
+            "Leave empty if no pet should be recommended."
+        ),
+    )
+    

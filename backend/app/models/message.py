@@ -34,9 +34,7 @@ class Message(Base):
         Enum(MessageRole),
     )
 
-    content: Mapped[str] = mapped_column(
-        Text,
-    )
+    content: Mapped[list] = mapped_column(JSONB)
 
     message_type : Mapped[MessageType] = mapped_column(
         Enum(MessageType),

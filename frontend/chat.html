@@ -5,7 +5,8 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>Homing Chat</title>
 
@@ -13,17 +14,23 @@
 
 <body>
 
-    <!-- Navbar -->
+    <!-- ================= Navbar ================= -->
 
     <header class="navbar">
 
         <div class="container">
 
-            <a href="index.html" class="logo">
+            <a href="index.html"
+               class="logo">
 
-                <img src="/logo.svg" alt="Homing">
+                <img src="/logo.svg"
+                     alt="Homing">
 
-                <span class="h3">Homing</span>
+                <span class="h3">
+
+                    Homing
+
+                </span>
 
             </a>
 
@@ -31,9 +38,53 @@
 
                 <ul class="nav-links">
 
-                    <li><a href="#">New Chat</a></li>
+                     <li>
 
-                    <li><a href="#">History</a></li>
+                        <button
+                            type="button"
+                            class="new-chat-btn"
+                        >
+                            New Chat
+                        </button>
+
+                    </li>
+
+
+                    <li class="history-menu">
+
+                        <button
+                            type="button"
+                            class="history-btn">
+
+                            History
+
+                        </button>
+
+                        <div class="history-dropdown hidden">
+
+                            <div class="history-list">
+
+                                <!--
+                                    JS render ở đây
+
+                                    <div class="history-item">
+
+                                        <button class="history-delete">
+                                            ✕
+                                        </button>
+
+                                        <button class="history-title">
+                                            Looking for Dog
+                                        </button>
+
+                                    </div>
+                                -->
+
+                            </div>
+
+                        </div>
+
+                    </li>
 
                 </ul>
 
@@ -43,9 +94,12 @@
 
     </header>
 
-        <div class="chat-toolbar">
+    <!-- ================= Toolbar ================= -->
 
-        <a href="index.html" class="back-link">
+    <div class="chat-toolbar">
+
+        <a href="index.html"
+           class="back-link">
 
             ← Back to Landing
 
@@ -53,99 +107,24 @@
 
     </div>
 
-    <!-- Chat Page -->
+    <!-- ================= Chat ================= -->
 
     <main class="chat-page">
 
         <section class="chat-container">
 
-            <!-- Conversation -->
-
             <div class="conversation">
 
-                <div class="message ai">
-
-                    <img src="/logo.svg" class="avatar" alt="AI">
-
-                    <div class="bubble ai-bubble">
-
-                        <p>Hello! I'm Homing.</p>
-
-                        <p>
-                            How can I help you find your new best friend today?
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <div class="message user">
-
-                    <div class="bubble user-bubble">
-
-                        I'm looking for a small dog that is good with kids.
-
-                    </div>
-
-                </div>
-
-                <div class="message ai">
-
-                    <img src="/logo.svg" class="avatar" alt="AI">
-
-                    <div class="bubble ai-bubble">
-
-                        That's wonderful! We have several small, friendly dogs waiting for a home.
-
-                    </div>
-
-                </div>
-
-                <!-- Thêm nhiều message để test scroll -->
-
-                <div class="message ai">
-
-                    <img src="/logo.svg" class="avatar" alt="AI">
-
-                    <div class="bubble ai-bubble">
-
-                        We also have rescue cats if you're interested.
-
-                    </div>
-
-                </div>
-
-                <div class="message user">
-
-                    <div class="bubble user-bubble">
-
-                        Can you recommend a calm dog?
-
-                    </div>
-
-                </div>
-
-                <div class="message ai">
-
-                    <img src="/logo.svg" class="avatar" alt="AI">
-
-                    <div class="bubble ai-bubble">
-
-                        Sure! I think Luna would be a great match.
-
-                    </div>
-
-                </div>
+                <!-- Chat.js render conversation -->
 
             </div>
-
-            <!-- Input -->
 
             <form class="chat-input">
 
                 <input
                     type="text"
-                    placeholder="Ask me about any dog..." />
+                    placeholder="Ask me about any pet..."
+                    autocomplete="off">
 
                 <button type="submit">
 
@@ -159,7 +138,11 @@
 
     </main>
 
-    <script type="module" src="/src/chat.js"></script>
+    <script
+        type="module"
+        src="/src/chat.js">
+
+    </script>
 
 </body>
 
