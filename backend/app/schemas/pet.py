@@ -83,8 +83,6 @@ class PetResponse(ORMModel):
 
     online_adoption_available: bool | None
 
-    contact_adoption: str | None
-
     description: str | None
 
     available: bool

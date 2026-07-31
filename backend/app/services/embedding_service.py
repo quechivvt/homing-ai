@@ -3,10 +3,10 @@ import asyncio
 
 from app.core.config import settings
 
-embeddings = GoogleGenerativeAIEmbeddings(
-            model=settings.EMBEDDING_MODEL,
-            google_api_key=settings.GEMINI_API_KEY,
-        )
+#embeddings = GoogleGenerativeAIEmbeddings(
+#            model=settings.EMBEDDING_MODEL,
+#            google_api_key=settings.GEMINI_API_KEY,
+#        )
 
 class EmbeddingService:
 
@@ -14,7 +14,9 @@ class EmbeddingService:
     BATCH_DELAY = 1.0
 
     def __init__(self):
-        self.embeddings = embeddings
+        self.embeddings = GoogleGenerativeAIEmbeddings(
+            model=settings.EMBEDDING_MODEL,
+            google_api_key=settings.GEMINI_API_KEY,)
 
     async def embed_query(
         self,

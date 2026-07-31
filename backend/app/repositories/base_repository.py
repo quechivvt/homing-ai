@@ -94,3 +94,5 @@ class BaseRepository(Generic[T]):
         await self.db.flush()
         await self.db.refresh(entity)
         return entity
+
+    

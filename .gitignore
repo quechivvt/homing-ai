@@ -100,3 +100,4 @@ coverage.xml
 # =========================
 *.swp
 *.swo
+k8s/config/secret.yaml

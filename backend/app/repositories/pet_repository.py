@@ -104,3 +104,67 @@ class PetRepository(BaseRepository[Pet]):
             results.append(pet)
 
         return results
+
+    from sqlalchemy import select
+
+    from sqlalchemy import select
+
+    async def find(
+        self,
+        *,
+        name: str | None = None,
+        species: str | None = None,
+        breed: str | None = None,
+        color: str | None = None,
+        gender: str | None = None,
+        age: str | None = None,
+        available: bool | None = True,
+        limit: int = 10,
+    ) -> list[Pet]:
+
+        stmt = select(Pet)
+
+        if available is not None:
+            stmt = stmt.where(
+                Pet.available.is_(available)
+            )
+
+        if name:
+            stmt = stmt.where(
+                Pet.name.ilike(f"%{name}%")
+            )
+
+        if species:
+            stmt = stmt.where(
+                Pet.species.ilike(f"%{species}%")
+            )
+
+        if breed:
+            stmt = stmt.where(
+                Pet.breed.ilike(f"%{breed}%")
+            )
+
+        if color:
+            stmt = stmt.where(
+                Pet.color.ilike(f"%{color}%")
+            )
+
+        if gender:
+            stmt = stmt.where(
+                Pet.gender.ilike(f"%{gender}%")
+            )
+
+        if age:
+            stmt = stmt.where(
+                Pet.age.ilike(f"%{age}%")
+            )
+
+        stmt = (
+            stmt
+            .order_by(Pet.updated_at.desc())
+            .limit(limit)
+        )
+
+        result = await self.db.execute(stmt)
+
+        return list(result.scalars().all())
