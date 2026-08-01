@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from app.schemas.message import PetCardContent
 from app.schemas.pet import PetResponse
+from uuid import UUID
 
 
 class BaseStreamEvent(BaseModel):
@@ -39,6 +40,9 @@ class ErrorEvent(BaseStreamEvent):
     event: Literal["error"] = "error"
     message: str
 
+class ConversationEvent(BaseModel):
+    event: Literal["conversation"] = "conversation"
+    conversation_id: UUID
 
 class DoneEvent(BaseStreamEvent):
     event: Literal["done"] = "done"

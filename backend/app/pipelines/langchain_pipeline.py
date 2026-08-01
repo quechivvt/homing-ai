@@ -4,6 +4,7 @@ from app.schemas.chat import (
     ChatMessage,
     ChatRequest
 )
+from langchain_core.messages import HumanMessage
 
 from app.prompts.chat_prompt import chat_prompt
 from app.pipelines.history_manager import HistoryManager
@@ -15,8 +16,9 @@ from app.core.logging import logger
 from app.pipelines.context_builder import ContextBuilder
 from app.pipelines.pipeline_state import PipelineState
 from app.models.chat_model import ChatModel
-from app.schemas.stream_event import TokenEvent
+from app.schemas.stream_event import TokenEvent, ConversationEvent
 from app.schemas.chat import ChatResult
+from app.models.title_model import TitleModel
 
 
 class LangChainPipeline(ChatPipeline):
@@ -28,6 +30,8 @@ class LangChainPipeline(ChatPipeline):
             chat_result_mapper : ChatResultMapper,
             context_builder : ContextBuilder,
             chat_model: ChatModel,
+            title_model: TitleModel,
+
         ):
             self.conversation_manager = conversation_manager
             self.history_manager = history_manager
@@ -35,6 +39,7 @@ class LangChainPipeline(ChatPipeline):
             self.chat_result_mapper = chat_result_mapper
             self.context_builder = context_builder
             self.chat_model = chat_model
+            self.title_model = title_model
 
     async def prepare(self, request: ChatRequest) -> PipelineState:
         conversation = await self.conversation_manager.get_or_create(request)
@@ -78,37 +83,40 @@ class LangChainPipeline(ChatPipeline):
 
         return state
 
-    async def stream(self, request: ChatRequest):
+    from langchain_core.messages import HumanMessage
 
-        state = await self.prepare(request)
+    async def generate_title(
+        self,
+        state: PipelineState,
+    ):
+        if state.conversation.title != "New Chat":
+            return
 
-        state = await self.build_prompt(state)
+        user_messages = [
+            message.content
+            for message in state.history
+            if isinstance(message, HumanMessage)
+        ]
 
-        messages = state.prompt.to_messages()
+        user_messages.append(state.request.message)
 
-        answer = []
-        try:
+        if len(user_messages) < 2:
+            return
 
-            async for event in self.chat_model.stream(messages):
-
-                if isinstance(event, TokenEvent):
-                    answer.append(event.token)
-
-                yield event
-
-        except Exception:
-            logger.exception("Streaming failed")
-            raise
-
-
-        state.result = ChatResult(
-            answer="".join(answer)
+        conversation = "\n".join(
+            f"User: {message}"
+            for message in user_messages[-3:]
         )
 
+        title = await self.title_model.generate(
+            conversation=conversation,
+        )
 
-        await self.map_result(state)
-
-        await self.finalize(state)
+        await self.conversation_manager.update_title(
+            conversation_id=state.conversation.id,
+            session_id=state.conversation.session_id,
+            title=title,
+        )
 
     async def map_result(self, state:PipelineState):
 
@@ -162,4 +170,46 @@ class LangChainPipeline(ChatPipeline):
 
         state = await self.map_result(state)
 
-        return await self.finalize(state)
+        response = await self.finalize(state)
+        
+        await self.generate_title(state)
+        
+        return response
+
+    async def stream(self, request: ChatRequest):
+    
+        state = await self.prepare(request)
+
+        yield ConversationEvent(
+            conversation_id=state.conversation.id,
+        )
+    
+        state = await self.build_prompt(state)
+    
+        messages = state.prompt.to_messages()
+    
+        answer = []
+        try:
+    
+            async for event in self.chat_model.stream(messages):
+    
+                if isinstance(event, TokenEvent):
+                    answer.append(event.token)
+    
+                yield event
+    
+        except Exception:
+            logger.exception("Streaming failed")
+            raise
+    
+    
+        state.result = ChatResult(
+            answer="".join(answer)
+        )
+    
+    
+        await self.map_result(state)
+    
+        response = await self.finalize(state)
+    
+        await self.generate_title(state)
