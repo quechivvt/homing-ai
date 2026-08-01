@@ -31,6 +31,8 @@ from app.tools.get_pet_tool import GetPetTool
 from app.tools.compare_pets_tool import ComparePetsTool
 from app.tools.tool_registry import ToolRegistry
 from app.tools.tool_executor import ToolExecutor
+from app.models.title_model import TitleModel
+from app.models.langchain_title_model import LangChainTitleModel
 
 import langchain_openai.chat_models.base as base
 from app.core.langchain_patch import _convert_message_to_dict
@@ -185,6 +187,13 @@ def get_chat_model(
 ) -> LangChainChatModel:
     return LangChainChatModel(provider=provider,executor=executor)
 
+def get_title_model(
+    provider: ChatModelProvider = Depends(get_chat_model_provider),
+) -> TitleModel:
+    return LangChainTitleModel(
+        provider=provider,
+    )
+
 def get_pipeline(
     history_manager = Depends(get_history_manager),
     conversation_manager = Depends(get_conversation_manager),
@@ -192,6 +201,7 @@ def get_pipeline(
     chat_result_mapper = Depends(get_chat_result_mapper),
     context_builder = Depends(get_context_builder),
     chat_model = Depends(get_chat_model),
+    title_model = Depends(get_title_model),
 ):
     if settings.PIPELINE =="LANGCHAIN":
         return LangChainPipeline(
@@ -200,8 +210,10 @@ def get_pipeline(
             knowledge_retriever=knowledge_retriever,
             chat_result_mapper = chat_result_mapper,
             context_builder = context_builder,
-            chat_model=chat_model
+            chat_model=chat_model,
+            title_model=title_model
         )
+
 
 #Service
 def get_chat_service(

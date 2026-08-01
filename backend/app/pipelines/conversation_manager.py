@@ -17,7 +17,7 @@ class ConversationManager:
     async def get_or_create(self,request:ChatRequest)-> Conversation:
         if request.conversation_id is None:
             conversation = await self.conversation_repository.create(
-                title=request.message,
+                title="New Chat",
                 session_id=str(request.session_id)
                 )
             await self.conversation_cache_repository.delete_conversations(request.session_id)
@@ -39,6 +39,22 @@ class ConversationManager:
         conversation_id: UUID,
     ) -> None:
         await self.conversation_repository.touch(conversation_id)
+
+    async def update_title(
+        self,
+        conversation_id: UUID,
+        session_id: str,
+        title: str,
+    ):
+
+        await self.conversation_repository.update_title(
+            conversation_id=conversation_id,
+            title=title,
+        )
+
+        await self.conversation_cache_repository.delete_conversations(
+            session_id=session_id,
+        )
         
 
     

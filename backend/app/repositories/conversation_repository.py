@@ -73,6 +73,25 @@ class ConversationRepository(BaseRepository[Conversation]):
     
         return conversation
 
+    async def update_title(
+        self,
+        conversation_id: UUID,
+        title: str,
+    ) -> None:
+
+        await self.db.execute(
+            update(Conversation)
+            .where(
+                Conversation.id == conversation_id
+            )
+            .values(
+                title=title,
+                updated_at=datetime.now(UTC),
+            )
+        )
+
+        await self.db.commit()
+
     async def touch(
         self,
         conversation_id: UUID,
