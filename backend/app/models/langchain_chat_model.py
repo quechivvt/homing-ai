@@ -3,7 +3,7 @@ from app.schemas.stream_event import TokenEvent
 from app.models.chat_model_provider import ChatModelProvider
 from app.tools.tool_executor import ToolExecutor
 from langchain_core.messages import AIMessage, ToolMessage
-
+from app.schemas.stream_event import ToolStartEvent, ToolEndEvent, PetCardEvent, DoneEvent
 
 class LangChainChatModel(ChatModel):
 
@@ -54,30 +54,21 @@ class LangChainChatModel(ChatModel):
 
 
     async def stream(self, messages):
-
         model = self.provider.chat()
-
         while True:
-
             tool_calls = []
-
             async for chunk in model.astream(messages):
-
                 if chunk.tool_calls:
                     tool_calls.extend(chunk.tool_calls)
-
                 if chunk.content:
-
                     text = self._extract_text(chunk.content)
-
                     if text:
                         yield TokenEvent(
                             token=text
                         )
-
             if not tool_calls:
+                yield DoneEvent()
                 return
-
             messages.append(
                 AIMessage(
                     content=[],
@@ -86,12 +77,30 @@ class LangChainChatModel(ChatModel):
             )
 
             for tool_call in tool_calls:
-
-                result = await self.executor.execute(tool_call)
-
-                messages.append(
-                    ToolMessage(
-                        tool_call_id=tool_call["id"],
-                        content=self.executor.serialize(result),
-                    )
+                print(">>> ToolStartEvent")
+                yield ToolStartEvent(
+                    tool=tool_call["name"]
                 )
+                
+                try:
+                    result = await self.executor.execute(tool_call)
+                    print(result)
+
+                    if isinstance(result, list):
+                        for pet in result:
+                            yield PetCardEvent(pet=pet)
+                    elif result is not None:
+                        yield PetCardEvent(pet=result)
+
+                    messages.append(
+                        ToolMessage(
+                            tool_call_id=tool_call["id"],
+                            content=self.executor.serialize(result),
+                        )
+                    )
+
+                finally:
+                    print(">>> ToolEndEvent")
+                    yield ToolEndEvent(
+                        tool=tool_call["name"]
+                    )

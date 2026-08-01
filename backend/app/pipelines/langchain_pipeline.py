@@ -41,17 +41,19 @@ class LangChainPipeline(ChatPipeline):
         history = await self.history_manager.load(
             conversation.id
         )
-        chunks = await self.knowledge_retriever.retrieve(
-            request.message
-        )
-        context = self.context_builder.build(chunks)
+        # ===== RAG DISABLED =====
+        #chunks = await self.knowledge_retriever.retrieve(
+        #    request.message
+        #)
+        #context = self.context_builder.build(chunks)
 
         return PipelineState(
             request=request,
             conversation=conversation,
             history=history,
-            chunks=chunks,
-            context=context,
+            # RAG disabled
+            chunks=[],
+            context="",
         )
 
     async def build_prompt(self, state:PipelineState):
@@ -59,7 +61,7 @@ class LangChainPipeline(ChatPipeline):
             {
                 "history": state.history,
                 "input": state.request.message,
-                "context": state.context,
+                #"context": state.context,
             }
         )
         return state

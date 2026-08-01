@@ -26,8 +26,6 @@ class IngestionService:
 
         pets = dogs + cats
 
-        print(f"Embedding {len(pets)} pets...")
-
         if not pets:
             return []
 

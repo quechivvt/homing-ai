@@ -14,8 +14,6 @@ async def main():
 
         count = await service.crawl_hanoi_pet_adoption()
 
-        print(f"Seeded {count} pets")
-
 
 if __name__ == "__main__":
     asyncio.run(main())

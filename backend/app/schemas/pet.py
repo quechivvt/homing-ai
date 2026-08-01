@@ -61,10 +61,7 @@ class PetUpdate(BaseModel):
 
 
 class PetResponse(ORMModel):
-    id: int
-
     source: str
-    source_id: str
 
     detail_url: str | None
     image_url: str | None
