@@ -22,7 +22,6 @@ async def main():
 
 
         chunks = await ingestion_service.ingest_pets()
-        print(f"Ingested {len(chunks)} chunks.")
 
 
 if __name__ == "__main__":

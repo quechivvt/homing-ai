@@ -11,7 +11,7 @@ import {
     getConversations
 } from "./api/conversation";
 
-import { chat } from "./api/chat";
+import { streamChat } from "./api/chat";
 import { getSessionId } from "./session";
 
 import DOMPurify from "dompurify";
@@ -333,66 +333,6 @@ function renderHistory(conversations) {
 
 }
 
-async function sendMessage(e) {
-    e.preventDefault();
-
-    const message = input.value.trim();
-
-    if (!message) {
-        return;
-    }
-
-    sendButton.disabled = true;
-
-    // Hiển thị ngay message của user
-    renderTextMessage("user", message);
-
-    input.value = "";
-    input.focus();
-
-    // Hiển thị loading của AI
-    const loading = renderLoadingMessage();
-
-    try {
-
-        const response = await chat({
-            session_id: getSessionId(),
-            conversation_id: conversationId,
-            message
-        });
-
-        conversationId = response.conversation_id;
-
-        history.replaceState(
-            {},
-            "",
-            `?conversation_id=${conversationId}`
-        );
-
-        // Xóa loading
-        loading.remove();
-
-        // Render các message mới
-        response.messages
-            .filter(message => message.role !== "user") // nếu backend trả cả user
-            .forEach(renderMessage);
-
-        await loadHistory();
-
-    } catch (error) {
-
-        console.error(error);
-
-        loading.remove();
-
-        // Có thể hiển thị lỗi ở đây nếu muốn
-
-    } finally {
-
-        sendButton.disabled = false;
-
-    }
-}
 
 function renderMessage(message) {
     message.content.forEach(item => {
@@ -409,6 +349,39 @@ function renderMessage(message) {
                 console.warn("Unknown content type:", item);
         }
     });
+}
+
+function renderTextMessage(role, text) {
+
+    const container = document.querySelector(".conversation");
+
+    const message = document.createElement("div");
+    message.className = `message ${role === "assistant" ? "ai" : "user"}`;
+
+    if (role === "assistant") {
+        const avatar = document.createElement("img");
+        avatar.src = "/logo.svg";
+        avatar.alt = "AI";
+        avatar.className = "avatar";
+        message.appendChild(avatar);
+    }
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+
+    bubble.dataset.text = text;
+
+    bubble.innerHTML = DOMPurify.sanitize(
+        marked.parse(text)
+    );
+
+    message.appendChild(bubble);
+
+    container.appendChild(message);
+
+    scrollToBottom();
+
+    return bubble;
 }
 
 function renderLoadingMessage() {
@@ -442,88 +415,148 @@ function renderLoadingMessage() {
     return message;
 }
 
-function renderTextMessage(role, text) {
 
-    const container =
-        document.querySelector(
-            ".conversation"
+
+async function sendMessage(e) {
+
+    e.preventDefault();
+
+    const message = input.value.trim();
+
+    if (!message) {
+        return;
+    }
+
+    sendButton.disabled = true;
+
+    renderTextMessage("user", message);
+
+    input.value = "";
+    input.focus();
+
+    const loading = renderLoadingMessage();
+
+    // Bubble AI để stream token
+    let aiBubble = null;
+    let loadingRemoved = false;
+
+    try {
+
+        await streamChat(
+            {
+                session_id: getSessionId(),
+                conversation_id: conversationId,
+                message,
+            },
+            (event) => {
+
+                console.log(event);
+
+                switch (event.event) {
+
+                    case "conversation":
+
+                        conversationId = event.conversation_id;
+
+                        history.replaceState(
+                            {},
+                            "",
+                            `?conversation_id=${conversationId}`
+                        );
+
+                        break;
+
+                    case "token":
+
+                        if (!loadingRemoved) {
+
+                            loading.remove();
+                            loadingRemoved = true;
+
+                            aiBubble = renderTextMessage(
+                                "assistant",
+                                ""
+                            );
+
+                        }
+
+                        appendToken(aiBubble, event.token);
+
+                        break;
+
+                    case "pet_card":
+
+                        renderPetCard(event.pet);
+
+                        break;
+
+                    case "tool_start":
+
+                        console.log(
+                            "Tool:",
+                            event.tool,
+                            "started"
+                        );
+
+                        break;
+
+                    case "tool_end":
+
+                        console.log(
+                            "Tool:",
+                            event.tool,
+                            "finished"
+                        );
+
+                        break;
+
+                    case "done":
+
+                        if (!loadingRemoved) {
+                            loading.remove();
+                        }
+
+                        break;
+
+                    case "error":
+
+                        throw new Error(event.message);
+
+                }
+
+            }
         );
 
-    const message =
-        document.createElement(
-            "div"
-        );
+        await loadHistory();
 
-    message.className =
-        `message ${
-            role === "assistant"
-                ? "ai"
-                : "user"
-        }`;
+    } catch (error) {
 
-    const bubble =
-        document.createElement(
-            "div"
-        );
+        console.error(error);
 
-    bubble.className =
-        `bubble ${
-            role === "assistant"
-                ? "ai-bubble"
-                : "user-bubble"
-        }`;
+        loading.remove();
 
-    if (
-        role === "assistant"
-    ) {
+        alert("Cannot connect to server.");
 
-        bubble.innerHTML =
-            DOMPurify.sanitize(
-                marked.parse(text)
-            );
+    } finally {
 
-    } else {
-
-        bubble.textContent =
-            text;
+        sendButton.disabled = false;
 
     }
 
-    if (
-        role === "assistant"
-    ) {
+}
 
-        const avatar =
-            document.createElement(
-                "img"
-            );
+function appendToken(bubble, token) {
 
-        avatar.src =
-            "/logo.svg";
+    bubble.dataset.text =
+        (bubble.dataset.text || "") + token;
 
-        avatar.alt =
-            "AI";
-
-        avatar.className =
-            "avatar";
-
-        message.append(
-            avatar,
-            bubble
-        );
-
-    } else {
-
-        message.append(
-            bubble
-        );
-
-    }
-
-    container.appendChild(
-        message
+    bubble.innerHTML = DOMPurify.sanitize(
+        marked.parse(
+            bubble.dataset.text
+        )
     );
 
+    scrollToBottom();
 }
 
 function renderPetCard(card) {
@@ -583,8 +616,8 @@ function renderPetCard(card) {
             <h3>${card.name}</h3>
 
             <a
-                href="/pet.html?id=${card.pet_id}"
-                class="pet-link"
+                href="${card.detail_url}"
+                target="_blank"
             >
                 View detail
             </a>

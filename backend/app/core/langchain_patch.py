@@ -17,7 +17,6 @@ from langchain_openai.chat_models.base import (
 
 
 def _convert_message_to_dict(message):
-    print(">>>>>>>> PATCH <<<<<<<<")
     message_dict: dict[str, Any] = {
         "content": _format_message_content(message.content)
     }

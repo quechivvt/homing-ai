@@ -61,9 +61,6 @@ class HanoiPetAdoptionCrawler:
                         )
                     )
 
-                print(
-                    f"PetType={pet_type_id}, Page={page}, Count={len(summaries)}"
-                )
 
                 page += 1
 

@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from app.schemas.message import PetCardContent
+from app.schemas.pet import PetResponse
 
 
 class BaseStreamEvent(BaseModel):
@@ -31,7 +32,7 @@ class ToolEndEvent(BaseStreamEvent):
 
 class PetCardEvent(BaseStreamEvent):
     event: Literal["pet_card"] = "pet_card"
-    pet: PetCardContent
+    pet: PetResponse
 
 
 class ErrorEvent(BaseStreamEvent):

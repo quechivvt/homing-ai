@@ -8,8 +8,5 @@ async def main():
 
     pets = await crawler.crawl()
 
-    print(len(pets))
-    print(pets[0])
-
 
 asyncio.run(main())
