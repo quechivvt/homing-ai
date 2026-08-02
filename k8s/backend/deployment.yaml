@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: chinguyen2407k22/homing-backend:v3
+          image: chinguyen2407k22/homing-backend:v4
           imagePullPolicy: Always
 
           ports:
@@ -29,8 +29,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: homing-config
+
             - secretRef:
                 name: homing-secret
+
+            - secretRef:
+                name: postgres-secret
 
           resources:
             requests:

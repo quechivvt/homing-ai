@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: chinguyen2407k22/homing-frontend:v5
+          image: chinguyen2407k22/homing-frontend:v7
           imagePullPolicy: Always
 
           ports:
